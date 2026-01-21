@@ -1,9 +1,23 @@
-podTemplate(containers: [containerTemplate(name: 'maven', image: 'maven', command: 'sleep', args: 'infinity')]) {
-  node(POD_LABEL) {
-    checkout scm
-    container('maven') {
-      sh 'mvn -B -ntp -Dmaven.test.failure.ignore verify'
-    }
-    junit '**/target/surefire-reports/TEST-*.xml'
+  pipeline {
+      agent any  // Uses any available agent
+
+      stages {
+          stage('Build & Test') {
+              steps {
+                  sh 'mvn clean test'
+              }
+          }
+
+          stage('Coverage') {
+              steps {
+                  recordCoverage(
+                      tools: [[parser: 'JACOCO']],
+                      qualityGates: [
+                          [threshold: 80.0, metric: 'LINE', baseline: 'PROJECT', unstable: true],
+                          [threshold: 75.0, metric: 'BRANCH', baseline: 'PROJECT', unstable: true]
+                      ]
+                  )
+              }
+          }
+      }
   }
-}
