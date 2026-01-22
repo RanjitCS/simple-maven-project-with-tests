@@ -1,10 +1,11 @@
   pipeline {
-      agent any  // Uses any available agent
+      agent any
 
       stages {
           stage('Build & Test') {
               steps {
-                  sh 'mvn clean test -Dmaven.test.failure.ignore=true'
+                  // Activate the coverage profile to generate JaCoCo reports
+                  sh 'mvn clean test -Pcoverage -Dmaven.test.failure.ignore=true'
               }
           }
 
@@ -13,8 +14,8 @@
                   recordCoverage(
                       tools: [[parser: 'JACOCO']],
                       qualityGates: [
-                          [threshold: 80.0, metric: 'LINE', baseline: 'PROJECT', unstable: true],
-                          [threshold: 75.0, metric: 'BRANCH', baseline: 'PROJECT', unstable: true]
+                          [threshold: 80.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'UNSTABLE'],
+                          [threshold: 75.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'UNSTABLE']
                       ]
                   )
               }
